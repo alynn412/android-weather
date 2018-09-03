@@ -30,7 +30,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import com.bumptech.glide.Glide;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         cityEditText = findViewById(R.id.cityEditText);
-        adapter = new CustomAdapter();
+        adapter = new CustomAdapter(getApplicationContext());
 
         RecyclerView recyclerView = findViewById(R.id.weatherrecyclerview);
         recyclerView.setAdapter(adapter);
@@ -114,6 +116,12 @@ public class MainActivity extends AppCompatActivity {
     public class CustomAdapter extends RecyclerView.Adapter<CustomViewHolder> {
 
         List<JSONObject> weatherList = new ArrayList<>();
+        Context context;
+
+        public CustomAdapter(Context context)
+        {
+            this.context = context;
+        }
 
         @Override
         public CustomViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -125,8 +133,18 @@ public class MainActivity extends AppCompatActivity {
 
             JSONObject currentWeather = weatherList.get(position);
             try {
-                holder.dateTextView.setText(""+currentWeather.getInt("dt"));
-                holder.tempTextView.setText(", "+currentWeather.getJSONObject("temp").getDouble("day"));
+                long datetime = currentWeather.getInt("dt");
+                Date date = new Date(datetime * 1000);
+                holder.dateTextView.setText(date.toString());
+
+                //holder.dateTextView.setText(""+currentWeather.getInt("dt"));
+                holder.tempTextView.setText((currentWeather.getJSONObject("temp").getDouble("day")-273)+" C");
+                holder.weatherTextView.setText(currentWeather.getJSONArray("weather").getJSONObject(0).getString("description"));
+                String picID = currentWeather.getJSONArray("weather").getJSONObject(0).getString("icon");
+                String picURL = "https://openweathermap.org/img/w/"+picID+".png";
+                Glide.with(MainActivity.this).load(picURL).into(holder.imageView);
+
+
 
             } catch (JSONException e) {
                 e.printStackTrace();
